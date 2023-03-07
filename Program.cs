@@ -27,31 +27,31 @@ namespace RacingML
 
 
 
-
-
-
-
             Console.WriteLine("End");
         }
         static void DrawFrame(byte[][] frame)
         {
+            // if the program doesnt recognize the following commands then use this code in powershell : dotnet add package System.Drawing.Common --version 7.0.0
             Random rand = new(0);
-            int scale = 20;
+            int scale = 25;
             SolidBrush brush = new SolidBrush(Color.White);
 
+            // i make the map or canvas
             Bitmap bmp = new(28 * scale, 28 * scale);
             Graphics gfx = Graphics.FromImage(bmp);
 
+            // i go through every pixel
             for (int i = 0; i < 28; i++)
                 for (int j = 0; j < 28; j++)
                 {
-                    //Range range = new(Int32.MinValue, Int32.MaxValue);
-                    brush.Color = Color.FromArgb(Int32.MaxValue * (1 / (frame[i][j] + 1)));
+                    byte grayScale = frame[i][j];
+                    brush.Color = Color.FromArgb(grayScale, grayScale, grayScale);
                     Rectangle rectangle = new(i * scale, j * scale, scale, scale);
 
                     gfx.FillRectangle(brush, rectangle);
                 }
 
+            // i save it to: E:\Stuff\Programming\Test\RacingML\bin\Debug\net7.0
             bmp.Save("test.jpg");
         }
         static (int label, byte[][] frame) MakeFrame(StreamReader sr)

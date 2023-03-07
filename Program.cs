@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.IO;
 
 namespace RacingML
@@ -11,7 +12,47 @@ namespace RacingML
 
             StreamReader sr = new StreamReader("E:\\Stuff\\Programming\\Test\\RacingML\\mnist_train.csv");
             sr.ReadLine();
-            Console.WriteLine(MakeFrame(sr));
+
+
+            DrawFrame(MakeFrame(sr).frame);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Console.WriteLine("End");
+        }
+        static void DrawFrame(byte[][] frame)
+        {
+            Random rand = new(0);
+            int scale = 20;
+            SolidBrush brush = new SolidBrush(Color.White);
+
+            Bitmap bmp = new(28 * scale, 28 * scale);
+            Graphics gfx = Graphics.FromImage(bmp);
+
+            for (int i = 0; i < 28; i++)
+                for (int j = 0; j < 28; j++)
+                {
+                    //Range range = new(Int32.MinValue, Int32.MaxValue);
+                    brush.Color = Color.FromArgb(Int32.MaxValue * (1 / (frame[i][j] + 1)));
+                    Rectangle rectangle = new(i * scale, j * scale, scale, scale);
+
+                    gfx.FillRectangle(brush, rectangle);
+                }
+
+            bmp.Save("test.jpg");
         }
         static (int label, byte[][] frame) MakeFrame(StreamReader sr)
         {
@@ -24,9 +65,9 @@ namespace RacingML
 
             for (int i = 0; i < 28; i++)
                 for (int j = 0; j < 28; j++)
-                    pixels[i][j] = Convert.ToByte(strings[i * 28 + j + 1]);
+                    pixels[j][i] = Convert.ToByte(strings[i * 28 + j + 1]);
 
-            return (Convert.ToInt32(strings[0]),  pixels);
+            return (Convert.ToInt32(strings[0]), pixels);
         }
     }
 }

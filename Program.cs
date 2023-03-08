@@ -6,6 +6,13 @@ namespace RacingML
 {
     class Program
     {
+        static private int[] layers = { 784, 16, 16, 10 };
+        static private float[][] neurons;
+        static private float[][] biases;
+        static private float[][][] weights;
+
+        static public float fitness = 0;
+
         static void Main(string[] args)
         {
             Console.WriteLine("Begin");
@@ -21,22 +28,22 @@ namespace RacingML
                 string[] command = Console.ReadLine().ToLower().Split(' ');
                 switch (command[0])
                 {
-                        // if the input is not something that have been implementet yet it will just give a failure message and give another try
+                    // if the input is not something that have been implementet yet it will just give a failure message and give another try
                     default:
                         Console.WriteLine("'{0}' is not recognized as an command", command[0]);
                         break;
 
-                        //if the user wishes to exit the program they can safely use this command
+                    //if the user wishes to exit the program they can safely use this command
                     case "exit":
                         isActive = false;
                         break;
 
-                        // the user can clear the command prompt
+                    // the user can clear the command prompt
                     case "clear":
                         Console.Clear();
                         break;
 
-                        // the user can draw as many frames as wanted, note that if there isnt specified an amount it will only draw 1 frame
+                    // the user can draw as many frames as wanted, note that if there isnt specified an amount it will only draw 1 frame
                     case "drawframe":
                         int num = 1;
                         if (command.Length > 1 && int.TryParse(command[1], out num))
@@ -45,6 +52,25 @@ namespace RacingML
                         else
                             DrawFrame(MakeFrame(sr).frame);
                         Console.WriteLine("-Succesfully drawn {0} Frame", num);
+                        break;
+
+                    case "save":
+                        if (command.Length > 1)
+                            switch (command[1])
+                            {
+                                default:
+                                    Console.WriteLine("Missing or invalid argument");
+                                    break;
+                                case "neurons":
+                                    Console.WriteLine("Saving neurons to 'Neurons.csv'");
+                                    SaveNeurons();
+                                    break;
+                            }
+                        else
+                        {
+                            Console.WriteLine("missing argument");
+                            Console.WriteLine("add neurons or similar argument");
+                        }
                         break;
                 } // main switch
             } // while opperational
@@ -64,6 +90,47 @@ namespace RacingML
 
             Console.WriteLine("End");
         } // Main
+        static void InitNeurons(bool randomize)
+        {
+            StreamReader neuronsCSV = new StreamReader("E:\\Stuff\\Programming\\Test\\RacingML\\Neurons.csv");
+            Random random = new Random();
+
+            // allocates all needed memory space 
+            neurons = new float[layers.Length][];
+            for (int i = 0; i < layers.Length; i++)
+                neurons[i] = new float[layers[i]];
+
+            /* i am not sure if this is neccesarry, it will randomly create values, but it seems they dont need valeus
+            if (neuronsCSV.ReadLine() != null && !randomize) // if true will load known values
+                for (int i = 0; i < layers.Length; i++)
+                    for (int j = 0; j < layers[i]; j++)
+                        neurons[i][j] = float.Parse(neuronsCSV.ReadLine());
+            else // makes random values
+                for (int i = 0; i < layers.Length; i++)
+                    for (int j = 0; j < layers[i]; j++)
+                        neurons[i][j] = float.Parse(random.NextDouble());
+            */
+
+            // will load all known values
+            for (int i = 0; i < layers.Length; i++)
+                for (int j = 0; j < layers[i]; j++)
+                    neurons[i][j] = float.Parse(neuronsCSV.ReadLine());
+
+
+            neuronsCSV.Close();
+        } // InitNeurons
+        static void SaveNeurons()
+        {
+            StreamWriter neuronsCSV = new StreamWriter("E:\\Stuff\\Programming\\Test\\RacingML\\Neurons.csv");
+
+            // writes all known values
+            for (int i = 0; i < layers.Length; i++)
+                for (int j = 0; j < layers[i]; j++)
+                    neuronsCSV.WriteLine(neurons[i][j]);
+
+
+            neuronsCSV.Close();
+        } // SaveNeurons
         static (int label, byte[][] frame) MakeFrame(StreamReader sr)
         {
             // the first thing is to initialzize the memory, i do this in a byte as its value is from 0 to 255 and that is perfect for my grayscaled input
@@ -85,7 +152,7 @@ namespace RacingML
         } // MakeFrame
         static void DrawFrame(byte[][] frame)
         {
-            // if the program doesnt recognize the following commands then use this code in powershell : dotnet add package System.Drawing.Common --version 7.0.0
+            // if the program doesnt recognize the following commands then use this code in powershell: dotnet add package System.Drawing.Common --version 7.0.0
             Random rand = new(0);
             int scale = 25;
             SolidBrush brush = new SolidBrush(Color.White);

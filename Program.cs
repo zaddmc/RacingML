@@ -22,6 +22,7 @@ namespace RacingML
 
 
 
+
             bool isActive = true;
             while (isActive)
             {
@@ -54,6 +55,7 @@ namespace RacingML
                         Console.WriteLine("-Succesfully drawn {0} Frame", num);
                         break;
 
+                    // different values can be saved if the user wishes to
                     case "save":
                         if (command.Length > 1)
                             switch (command[1])
@@ -64,6 +66,50 @@ namespace RacingML
                                 case "neurons":
                                     Console.WriteLine("Saving neurons to 'Neurons.csv'");
                                     SaveNeurons();
+                                    break;
+                                case "biases":
+                                    Console.WriteLine("Saving biases to 'Biases.csv'");
+                                    SaveBiases();
+                                    break;
+                            }
+                        else
+                        {
+                            Console.WriteLine("missing argument");
+                            Console.WriteLine("add neurons or similar argument");
+                        }
+                        break;
+
+                    // different values can be loaded if the user wishes to
+                    case "load":
+                        if (command.Length > 1)
+                            switch (command[1])
+                            {
+                                default:
+                                    Console.WriteLine("Missing or invalid argument");
+                                    break;
+                                case "neurons":
+                                    if (command.Length > 2)
+                                    {
+                                        Console.WriteLine("Allocating memory space for Neurons");
+                                        InitNeurons(true);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Loading neurons from 'Neurons.csv' or Allocating memory space for Neurons");
+                                        InitNeurons(false);
+                                    }
+                                    break;
+                                case "biases":
+                                    if (command.Length > 2)
+                                    {
+                                        Console.WriteLine("Allocating memory space for Biases");
+                                        InitBiases(true);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Loading biases from 'Biases.csv' or Allocating memory space for Biases");
+                                        InitBiases(false);
+                                    }
                                     break;
                             }
                         else
@@ -90,47 +136,82 @@ namespace RacingML
 
             Console.WriteLine("End");
         } // Main
-        static void InitNeurons(bool randomize)
+        static void InitNeurons(bool nullify)
         {
             StreamReader neuronsCSV = new StreamReader(@"Neurons.csv");
-            Random random = new Random();
+            string[] strings;
 
             // allocates all needed memory space 
             neurons = new float[layers.Length][];
             for (int i = 0; i < layers.Length; i++)
                 neurons[i] = new float[layers[i]];
 
-            /* i am not sure if this is neccesarry, it will randomly create values, but it seems they dont need valeus
-            if (neuronsCSV.ReadLine() != null && !randomize) // if true will load known values
+            if (neuronsCSV.Peek() != -1 && !nullify) // if true will load known values
+                for (int i = 0; i < layers.Length; i++)
+                {
+                    strings = neuronsCSV.ReadLine().Split(',');
+                    for (int j = 0; j < layers[i]; j++)
+                        neurons[i][j] = float.Parse(strings[j]);
+                }
+            else // allocates the memory of them with 0 as the value
                 for (int i = 0; i < layers.Length; i++)
                     for (int j = 0; j < layers[i]; j++)
-                        neurons[i][j] = float.Parse(neuronsCSV.ReadLine());
-            else // makes random values
-                for (int i = 0; i < layers.Length; i++)
-                    for (int j = 0; j < layers[i]; j++)
-                        neurons[i][j] = float.Parse(random.NextDouble());
-            */
-
-            // will load all known values
-            for (int i = 0; i < layers.Length; i++)
-                for (int j = 0; j < layers[i]; j++)
-                    neurons[i][j] = float.Parse(neuronsCSV.ReadLine());
-
+                        neurons[i][j] = 0;
 
             neuronsCSV.Close();
         } // InitNeurons
+        static void InitBiases(bool nullify)
+        {
+            StreamReader biasesCSV = new StreamReader(@"Biases.csv");
+            string[] strings;
+
+            // allocates all needed memory space 
+            biases = new float[layers.Length][];
+            for (int i = 0; i < layers.Length; i++)
+                biases[i] = new float[layers[i]];
+
+            if (biasesCSV.Peek() != -1 && !nullify) // if true will load known values
+                for (int i = 0; i < layers.Length; i++)
+                {
+                    strings = biasesCSV.ReadLine().Split(',');
+                    for (int j = 0; j < layers[i]; j++)
+                        biases[i][j] = float.Parse(strings[j]);
+                }
+            else // allocates the memory of them with 0 as the value
+                for (int i = 0; i < layers.Length; i++)
+                    for (int j = 0; j < layers[i]; j++)
+                        biases[i][j] = 0;
+
+            biasesCSV.Close();
+        } // InitBiases
         static void SaveNeurons()
         {
             StreamWriter neuronsCSV = new StreamWriter(@"Neurons.csv");
 
             // writes all known values
             for (int i = 0; i < layers.Length; i++)
-                for (int j = 0; j < layers[i]; j++)
-                    neuronsCSV.WriteLine(neurons[i][j]);
-
+            {
+                for (int j = 0; j < layers[i] - 1; j++)
+                    neuronsCSV.Write("{0},", neurons[i][j]);
+                neuronsCSV.WriteLine(neurons[i][layers[i] - 1]);
+            }
 
             neuronsCSV.Close();
         } // SaveNeurons
+        static void SaveBiases()
+        {
+            StreamWriter biasesCSV = new StreamWriter(@"Biases.csv");
+
+            // writes all known values
+            for (int i = 0; i < layers.Length; i++)
+            {
+                for (int j = 0; j < layers[i] - 1; j++)
+                    biasesCSV.Write("{0},", biases[i][j]);
+                biasesCSV.WriteLine(biases[i][layers[i] - 1]);
+            }
+
+            biasesCSV.Close();
+        } // SaveBiases
         static (int label, byte[][] frame) MakeFrame(StreamReader sr)
         {
             // the first thing is to initialzize the memory, i do this in a byte as its value is from 0 to 255 and that is perfect for my grayscaled input

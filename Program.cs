@@ -17,7 +17,7 @@ namespace RacingML
         {
             Console.WriteLine("Begin");
 
-            StreamReader sr = new StreamReader("E:\\Stuff\\Programming\\Test\\RacingML\\mnist_train.csv");
+            StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
 
 
@@ -92,7 +92,7 @@ namespace RacingML
         } // Main
         static void InitNeurons(bool randomize)
         {
-            StreamReader neuronsCSV = new StreamReader("E:\\Stuff\\Programming\\Test\\RacingML\\Neurons.csv");
+            StreamReader neuronsCSV = new StreamReader(@"Neurons.csv");
             Random random = new Random();
 
             // allocates all needed memory space 
@@ -121,7 +121,7 @@ namespace RacingML
         } // InitNeurons
         static void SaveNeurons()
         {
-            StreamWriter neuronsCSV = new StreamWriter("E:\\Stuff\\Programming\\Test\\RacingML\\Neurons.csv");
+            StreamWriter neuronsCSV = new StreamWriter(@"Neurons.csv");
 
             // writes all known values
             for (int i = 0; i < layers.Length; i++)

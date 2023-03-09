@@ -20,7 +20,7 @@ namespace RacingML
             StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
 
-
+            //debugging script
 
             bool isActive = true;
             while (isActive)
@@ -208,27 +208,27 @@ namespace RacingML
 
             // allocates all needed memory space 
             weights = new float[layers.Length - 1][][];
-            for (int i = 0; i < layers.Length - 1; i++)
+            for (int i = 0; i < weights.Length; i++)
             {
-                weights[i] = new float[layers[i + 1]][];
-                for (int j = 0; j < layers[i + 1]; j++)
-                    weights[i][j] = new float[layers[i]];
+                weights[i] = new float[layers[i]][];
+                for (int j = 0; j < layers[i]; j++)
+                    weights[i][j] = new float[layers[i + 1]];
             }
-
 
             if (weightsCSV.Peek() != -1 && !randomize) // if true will load known values
                 for (int i = 0; i < weights.Length; i++)
                     for (int j = 0; j < weights[i].Length; j++)
+                    {
+                        strings = weightsCSV.ReadLine().Split('.');
                         for (int k = 0; k < weights[i][j].Length; k++)
-                        {
-                            strings = weightsCSV.ReadLine().Split('.');
                             weights[i][j][k] = float.Parse(strings[k]);
-                        }
+                    }
             else // allocates the memory of them with a random value between -5 and 5
                 for (int i = 0; i < weights.Length; i++)
                     for (int j = 0; j < weights[i].Length; j++)
                         for (int k = 0; k < weights[i][j].Length; k++)
                             weights[i][j][k] = random.NextSingle() * 10 - 5;
+
 
             weightsCSV.Close();
         } // InitWeights
@@ -265,12 +265,13 @@ namespace RacingML
             StreamWriter weightsCSV = new StreamWriter(@"Weights.csv");
 
             // writes all known values
-            for (int i = 0; i < layers.Length; i++)
-            {
-                for (int j = 0; j < layers[i] - 1; j++)
-                    weightsCSV.Write("{0}.", weights[i][j]);
-                weightsCSV.WriteLine(weights[i][layers[i] - 1]);
-            }
+            for (int i = 0; i < weights.Length; i++)
+                for (int j = 0; j < weights[i].Length; j++)
+                {
+                    for (int k = 0; k < weights[i][j].Length - 1; k++)
+                        weightsCSV.Write("{0}.", weights[i][j][k]);
+                    weightsCSV.WriteLine(weights[i][j][weights[i][j].Length - 1]);
+                }
 
             weightsCSV.Close();
         } // SaveWeights

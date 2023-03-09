@@ -20,12 +20,16 @@ namespace RacingML
             StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
 
-            //debugging script
+
+            //debugging script 
             InitNeurons(false);
             InitBiases(false);
             InitWeights(false);
 
             DoTheThingBart(sr.ReadLine());
+
+            SaveNeurons();
+
 
             bool isActive = true;
             while (isActive)
@@ -192,6 +196,19 @@ namespace RacingML
                     neurons[0][i] = 0;
 
 
+            for (int i = 1; i < neurons.Length; i++)
+            {
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    float value = biases[i][j];
+                    for (int k = 0; k < neurons[i - 1].Length; k++)
+                    {
+                        value += weights[i - 1][k][j] * neurons[i - 1][k];
+                    }
+                    neurons[i][j] = (float)Math.Tanh(value);
+                }
+            }
+
 
 
 
@@ -211,7 +228,7 @@ namespace RacingML
             if (neuronsCSV.Peek() != -1 && !nullify) // if true will load known values
                 for (int i = 0; i < layers.Length; i++)
                 {
-                    strings = neuronsCSV.ReadLine().Split(',');
+                    strings = neuronsCSV.ReadLine().Split('.');
                     for (int j = 0; j < layers[i]; j++)
                         neurons[i][j] = float.Parse(strings[j]);
                 }
@@ -287,7 +304,7 @@ namespace RacingML
             for (int i = 0; i < layers.Length; i++)
             {
                 for (int j = 0; j < layers[i] - 1; j++)
-                    neuronsCSV.Write("{0},", neurons[i][j]);
+                    neuronsCSV.Write("{0}.", neurons[i][j]);
                 neuronsCSV.WriteLine(neurons[i][layers[i] - 1]);
             }
 

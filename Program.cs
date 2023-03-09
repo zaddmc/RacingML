@@ -56,83 +56,109 @@ namespace RacingML
 
                     // different values can be saved if the user wishes to
                     case "save":
-                        if (command.Length > 1)
-                            switch (command[1])
-                            {
-                                default:
-                                    Console.WriteLine("Missing or invalid argument");
-                                    break;
-                                case "neurons":
-                                    Console.WriteLine("Saving neurons to 'Neurons.csv'");
-                                    SaveNeurons();
-                                    break;
-                                case "biases":
-                                    Console.WriteLine("Saving biases to 'Biases.csv'");
-                                    SaveBiases();
-                                    break;
-                                case "weights":
-                                    Console.WriteLine("Saving weights to 'Weights.csv'");
-                                    SaveWeights();
-                                    break;
-                            }
-                        else
                         {
-                            Console.WriteLine("missing argument");
-                            Console.WriteLine("add neurons or similar argument");
-                        }
-                        break;
+                            if (command.Length > 1)
+                                switch (command[1])
+                                {
+                                    default:
+                                        Console.WriteLine("-Missing or invalid argument");
+                                        break;
+                                    case "neurons":
+                                        Console.WriteLine("-Saving neurons to 'Neurons.csv'");
+                                        SaveNeurons();
+                                        break;
+                                    case "biases":
+                                        Console.WriteLine("-Saving biases to 'Biases.csv'");
+                                        SaveBiases();
+                                        break;
+                                    case "weights":
+                                        Console.WriteLine("-Saving weights to 'Weights.csv'");
+                                        SaveWeights();
+                                        break;
+                                    case "all":
+                                        Console.WriteLine("-Saving neurons, biases and weights to to their respective csv file");
+                                        SaveNeurons();
+                                        SaveBiases();
+                                        SaveWeights();
+                                        break;
 
+                                }
+                            else
+                            {
+                                Console.WriteLine("missing argument");
+                                Console.WriteLine("add neurons or similar argument");
+                            }
+                            break;
+                        }
                     // different values can be loaded if the user wishes to
                     case "load":
+                        { 
                         if (command.Length > 1)
                             switch (command[1])
                             {
                                 default:
-                                    Console.WriteLine("Missing or invalid argument");
+                                    Console.WriteLine("-Missing or invalid argument");
                                     break;
                                 case "neurons":
                                     if (command.Length > 2)
                                     {
-                                        Console.WriteLine("Allocating memory space for Neurons");
+                                        Console.WriteLine("-Allocating memory space for Neurons");
                                         InitNeurons(true);
                                     }
                                     else
                                     {
-                                        Console.WriteLine("Loading neurons from 'Neurons.csv' or Allocating memory space for Neurons");
+                                        Console.WriteLine("-Loading neurons from 'Neurons.csv' or Allocating memory space for Neurons");
                                         InitNeurons(false);
                                     }
                                     break;
                                 case "biases":
                                     if (command.Length > 2)
                                     {
-                                        Console.WriteLine("Allocating memory space for Biases");
+                                        Console.WriteLine("-Allocating memory space with random values for Biases");
                                         InitBiases(true);
                                     }
                                     else
                                     {
-                                        Console.WriteLine("Loading biases from 'Biases.csv' or Allocating memory space for Biases");
+                                        Console.WriteLine("-Loading biases from 'Biases.csv' or Allocating memory space with random values for Biases");
                                         InitBiases(false);
                                     }
                                     break;
                                 case "weights":
                                     if (command.Length > 2)
                                     {
-                                        Console.WriteLine("Allocating memory space for Weights");
+                                        Console.WriteLine("-Allocating memory space for with random values Weights");
                                         InitWeights(true);
                                     }
                                     else
                                     {
-                                        Console.WriteLine("Loading weights from 'Weights.csv' or Allocating memory space for Weights");
+                                        Console.WriteLine("-Loading weights from 'Weights.csv' or Allocating memory space for with random values Weights");
+                                        InitWeights(false);
+                                    }
+                                    break;
+                                case "all":
+                                    if (command.Length > 2)
+                                    {
+                                        Console.WriteLine("-Allocating memory space with random values for Biases and Weights");
+                                        InitNeurons(true);
+                                        InitBiases(true);
+                                        InitWeights(true);
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("-Loading weights from 'Weights.csv' or Allocating memory space with random values for Biases and Weights");
+                                        InitNeurons(false);
+                                        InitBiases(false);
                                         InitWeights(false);
                                     }
                                     break;
                             }
                         else
                         {
-                            Console.WriteLine("missing argument");
-                            Console.WriteLine("add neurons or similar argument");
+                            Console.WriteLine("Missing argument");
+                            Console.WriteLine("Add neurons or similar argument");
                         }
                         break;
+                        }
                 } // main switch
             } // while opperational
 

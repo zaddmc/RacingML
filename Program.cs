@@ -21,6 +21,11 @@ namespace RacingML
             sr.ReadLine();
 
             //debugging script
+            InitNeurons(false);
+            InitBiases(false);
+            InitWeights(false);
+
+            DoTheThingBart(sr.ReadLine());
 
             bool isActive = true;
             while (isActive)
@@ -48,9 +53,9 @@ namespace RacingML
                         int num = 1;
                         if (command.Length > 1 && int.TryParse(command[1], out num))
                             for (int i = 0; i < num; i++)
-                                DrawFrame(MakeFrame(sr).frame);
+                                DrawFrame(MakeFrame(sr.ReadLine()).frame);
                         else
-                            DrawFrame(MakeFrame(sr).frame);
+                            DrawFrame(MakeFrame(sr.ReadLine()).frame);
                         Console.WriteLine("-Succesfully drawn {0} Frame", num);
                         break;
 
@@ -92,72 +97,72 @@ namespace RacingML
                         }
                     // different values can be loaded if the user wishes to
                     case "load":
-                        { 
-                        if (command.Length > 1)
-                            switch (command[1])
-                            {
-                                default:
-                                    Console.WriteLine("-Missing or invalid argument");
-                                    break;
-                                case "neurons":
-                                    if (command.Length > 2)
-                                    {
-                                        Console.WriteLine("-Allocating memory space for Neurons");
-                                        InitNeurons(true);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("-Loading neurons from 'Neurons.csv' or Allocating memory space for Neurons");
-                                        InitNeurons(false);
-                                    }
-                                    break;
-                                case "biases":
-                                    if (command.Length > 2)
-                                    {
-                                        Console.WriteLine("-Allocating memory space with random values for Biases");
-                                        InitBiases(true);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("-Loading biases from 'Biases.csv' or Allocating memory space with random values for Biases");
-                                        InitBiases(false);
-                                    }
-                                    break;
-                                case "weights":
-                                    if (command.Length > 2)
-                                    {
-                                        Console.WriteLine("-Allocating memory space for with random values Weights");
-                                        InitWeights(true);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("-Loading weights from 'Weights.csv' or Allocating memory space for with random values Weights");
-                                        InitWeights(false);
-                                    }
-                                    break;
-                                case "all":
-                                    if (command.Length > 2)
-                                    {
-                                        Console.WriteLine("-Allocating memory space with random values for Biases and Weights");
-                                        InitNeurons(true);
-                                        InitBiases(true);
-                                        InitWeights(true);
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("-Loading weights from 'Weights.csv' or Allocating memory space with random values for Biases and Weights");
-                                        InitNeurons(false);
-                                        InitBiases(false);
-                                        InitWeights(false);
-                                    }
-                                    break;
-                            }
-                        else
                         {
-                            Console.WriteLine("Missing argument");
-                            Console.WriteLine("Add neurons or similar argument");
-                        }
-                        break;
+                            if (command.Length > 1)
+                                switch (command[1])
+                                {
+                                    default:
+                                        Console.WriteLine("-Missing or invalid argument");
+                                        break;
+                                    case "neurons":
+                                        if (command.Length > 2)
+                                        {
+                                            Console.WriteLine("-Allocating memory space for Neurons");
+                                            InitNeurons(true);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("-Loading neurons from 'Neurons.csv' or Allocating memory space for Neurons");
+                                            InitNeurons(false);
+                                        }
+                                        break;
+                                    case "biases":
+                                        if (command.Length > 2)
+                                        {
+                                            Console.WriteLine("-Allocating memory space with random values for Biases");
+                                            InitBiases(true);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("-Loading biases from 'Biases.csv' or Allocating memory space with random values for Biases");
+                                            InitBiases(false);
+                                        }
+                                        break;
+                                    case "weights":
+                                        if (command.Length > 2)
+                                        {
+                                            Console.WriteLine("-Allocating memory space for with random values Weights");
+                                            InitWeights(true);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("-Loading weights from 'Weights.csv' or Allocating memory space for with random values Weights");
+                                            InitWeights(false);
+                                        }
+                                        break;
+                                    case "all":
+                                        if (command.Length > 2)
+                                        {
+                                            Console.WriteLine("-Allocating memory space with random values for Biases and Weights");
+                                            InitNeurons(true);
+                                            InitBiases(true);
+                                            InitWeights(true);
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine("-Loading weights from 'Weights.csv' or Allocating memory space with random values for Biases and Weights");
+                                            InitNeurons(false);
+                                            InitBiases(false);
+                                            InitWeights(false);
+                                        }
+                                        break;
+                                }
+                            else
+                            {
+                                Console.WriteLine("Missing argument");
+                                Console.WriteLine("Add neurons or similar argument");
+                            }
+                            break;
                         }
                 } // main switch
             } // while opperational
@@ -174,9 +179,25 @@ namespace RacingML
 
 
 
-
             Console.WriteLine("End");
         } // Main
+        static void DoTheThingBart(string strRed)
+        {
+            // i start by loading the first layer of neurons
+            string[] strings = strRed.Split(',');
+            for (int i = 0; i < neurons[0].Length; i++)
+                if (strings[i + 1] != "0")
+                    neurons[0][i] = 1 / float.Parse(strings[i + 1]);
+                else
+                    neurons[0][i] = 0;
+
+
+
+
+
+
+            Console.WriteLine("debug");
+        } // DoTheThingBart
         static void InitNeurons(bool nullify)
         {
             StreamReader neuronsCSV = new StreamReader(@"Neurons.csv");
@@ -301,7 +322,7 @@ namespace RacingML
 
             weightsCSV.Close();
         } // SaveWeights
-        static (int label, byte[][] frame) MakeFrame(StreamReader sr)
+        static (int label, byte[][] frame) MakeFrame(string incoming)
         {
             // the first thing is to initialzize the memory, i do this in a byte as its value is from 0 to 255 and that is perfect for my grayscaled input
             // if i did not use byte the memory would be hit quite hard and i dont need more information than a byte anyways
@@ -310,7 +331,7 @@ namespace RacingML
                 pixels[i] = new byte[28];
 
             // i read the next line in my training set and save it in a string array
-            string[] strings = sr.ReadLine().Split(',');
+            string[] strings = incoming.Split(',');
 
             // i go through every value and position it in the byte array with an array inside
             for (int i = 0; i < 28; i++)

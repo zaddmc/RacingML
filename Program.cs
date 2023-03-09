@@ -22,14 +22,8 @@ namespace RacingML
 
 
             //debugging script 
-            InitNeurons(false);
-            InitBiases(false);
-            InitWeights(false);
-
-            DoTheThingBart(sr.ReadLine());
-
-            SaveNeurons();
-
+            
+            //end debugging script
 
             bool isActive = true;
             while (isActive)
@@ -195,25 +189,17 @@ namespace RacingML
                 else
                     neurons[0][i] = 0;
 
-
+            // the bulk of calculations
             for (int i = 1; i < neurons.Length; i++)
-            {
                 for (int j = 0; j < neurons[i].Length; j++)
                 {
                     float value = biases[i][j];
                     for (int k = 0; k < neurons[i - 1].Length; k++)
-                    {
-                        value += weights[i - 1][k][j] * neurons[i - 1][k];
-                    }
+                        value += weights[i - 1][j][k] * neurons[i - 1][k];
                     neurons[i][j] = (float)Math.Tanh(value);
                 }
-            }
-
-
-
-
-
-            Console.WriteLine("debug");
+            
+            
         } // DoTheThingBart
         static void InitNeurons(bool nullify)
         {
@@ -276,7 +262,7 @@ namespace RacingML
             {
                 weights[i] = new float[layers[i]][];
                 for (int j = 0; j < layers[i]; j++)
-                    weights[i][j] = new float[layers[i + 1]];
+                    weights[i][j] = new float[layers[i]];
             }
 
             if (weightsCSV.Peek() != -1 && !randomize) // if true will load known values

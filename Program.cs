@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 
 namespace RacingML
 {
@@ -10,8 +12,7 @@ namespace RacingML
         static private float[][] neurons;
         static private float[][] biases;
         static private float[][][] weights;
-
-        static public float fitness = 0;
+        static private List<int> activations;
 
         static void Main(string[] args)
         {
@@ -19,10 +20,11 @@ namespace RacingML
 
             StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
-
+            activations = new List<int>();
+            
 
             //debugging script 
-            
+
             //end debugging script
 
             bool isActive = true;
@@ -55,6 +57,15 @@ namespace RacingML
                         else
                             DrawFrame(MakeFrame(sr.ReadLine()).frame);
                         Console.WriteLine("-Succesfully drawn {0} Frame", num);
+                        break;
+
+                        // if the user wishes to feedforawrd for however many times they wish
+                    case "feedforward":
+                        int cycles = 1;
+                        if (command.Length > 1 )
+                            cycles = int.Parse(command[1]);
+                        ActivateBart(sr, cycles);
+                        Console.WriteLine("-Succesfully calculated {0} Frame", cycles);
                         break;
 
                     // different values can be saved if the user wishes to
@@ -198,9 +209,18 @@ namespace RacingML
                         value += weights[i - 1][j][k] * neurons[i - 1][k];
                     neurons[i][j] = (float)Math.Tanh(value);
                 }
-            
-            
+
+
         } // DoTheThingBart
+        static void ActivateBart(StreamReader sr, int cycles)
+        {
+            for (int i = 0; i < cycles; i++)
+            {
+                DoTheThingBart(sr.ReadLine());
+            }
+
+
+        } // ActivateBart
         static void InitNeurons(bool nullify)
         {
             StreamReader neuronsCSV = new StreamReader(@"Neurons.csv");

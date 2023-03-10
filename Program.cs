@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 
 namespace RacingML
 {
@@ -21,10 +20,13 @@ namespace RacingML
             StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
             activations = new List<int>();
-            
+
 
             //debugging script 
-
+            InitBiases(false);
+            InitNeurons(false);
+            InitWeights(false);
+            ActivateBart(sr, 1000);
             //end debugging script
 
             bool isActive = true;
@@ -59,13 +61,13 @@ namespace RacingML
                         Console.WriteLine("-Succesfully drawn {0} Frame", num);
                         break;
 
-                        // if the user wishes to feedforawrd for however many times they wish
+                    // if the user wishes to feedforawrd for however many times they wish
                     case "feedforward":
                         int cycles = 1;
-                        if (command.Length > 1 )
+                        if (command.Length > 1)
                             cycles = int.Parse(command[1]);
-                        ActivateBart(sr, cycles);
-                        Console.WriteLine("-Succesfully calculated {0} Frame", cycles);
+                        double time = ActivateBart(sr, cycles);
+                        Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, time);
                         break;
 
                     // different values can be saved if the user wishes to
@@ -190,7 +192,7 @@ namespace RacingML
 
             Console.WriteLine("End");
         } // Main
-        static void DoTheThingBart(string strRed)
+        static int DoTheThingBart(string strRed)
         {
             // i start by loading the first layer of neurons
             string[] strings = strRed.Split(',');
@@ -210,16 +212,27 @@ namespace RacingML
                     neurons[i][j] = (float)Math.Tanh(value);
                 }
 
-
+            return int.Parse(strings[0]);
         } // DoTheThingBart
-        static void ActivateBart(StreamReader sr, int cycles)
+        static double ActivateBart(StreamReader sr, int cycles)
         {
+            StreamWriter activationsCSV = new StreamWriter(@"Activations.csv");
+
+            // i make a time stamp to know how long it takes
+            DateTime timeStamp = DateTime.UtcNow;
+
+            // i call the forward feeding network as many times as wished and then i save the neuron activations aswell as the label os that i can later tell it how to behave properly
             for (int i = 0; i < cycles; i++)
             {
-                DoTheThingBart(sr.ReadLine());
+                int label = DoTheThingBart(sr.ReadLine());
+                for (int j = 0; j < neurons[neurons.Length - 1].Length; j++)
+                    activationsCSV.Write("{0}.", neurons[neurons.Length - 1][j]);
+                activationsCSV.WriteLine(label);
             }
+            double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
 
-
+            activationsCSV.Close();
+            return timeStampEnd;
         } // ActivateBart
         static void InitNeurons(bool nullify)
         {

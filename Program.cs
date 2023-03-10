@@ -26,7 +26,8 @@ namespace RacingML
             InitBiases(false);
             InitNeurons(false);
             InitWeights(false);
-            ActivateBart(sr, 1000);
+            //ActivateBart(sr, 1000);
+            PropagateBart(1000);
             //end debugging script
 
             bool isActive = true;
@@ -234,6 +235,29 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
+        static void PropagateBart(int cycles)
+        {
+            StreamReader activationsCSV = new StreamReader(@"Activations.csv");
+
+            for (int i = 0; i < cycles; i++)
+            {
+
+
+
+
+
+
+
+
+            }
+
+
+
+
+
+            activationsCSV.Close();
+            return;
+        } // PropagateBart
         static void InitNeurons(bool nullify)
         {
             StreamReader neuronsCSV = new StreamReader(@"Neurons.csv");

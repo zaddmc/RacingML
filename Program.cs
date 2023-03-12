@@ -21,7 +21,7 @@ namespace RacingML
             sr.ReadLine();
             activations = new List<int>();
 
-
+            
             //debugging script 
             InitBiases(false);
             InitNeurons(false);
@@ -29,6 +29,7 @@ namespace RacingML
             //ActivateBart(sr, 1000);
             PropagateBart(1000);
             //end debugging script
+            
 
             bool isActive = true;
             while (isActive)
@@ -67,8 +68,15 @@ namespace RacingML
                         int cycles = 1;
                         if (command.Length > 1)
                             cycles = int.Parse(command[1]);
-                        double time = ActivateBart(sr, cycles);
-                        Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, time);
+                        Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, ActivateBart(sr, cycles));
+                        break;
+
+                    // if the user wishes to propegate the neural network they can do as many times as they specify
+                    case "propagate":
+                        int cyclesProp = 1;
+                        if (command.Length > 1)
+                            cyclesProp = int.Parse(command[1]);
+                        Console.WriteLine("-Succesfully propegated {0} Frame, in {1} miliseconds", cyclesProp, ActivateBart(sr, cyclesProp));
                         break;
 
                     // different values can be saved if the user wishes to
@@ -235,28 +243,50 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
-        static void PropagateBart(int cycles)
+        static double PropagateBart(int cycles)
         {
             StreamReader activationsCSV = new StreamReader(@"Activations.csv");
 
+            DateTime timeStamp = DateTime.UtcNow;
+
             for (int i = 0; i < cycles; i++)
             {
+                //reading the activated neurons and the associated label
+                string[] incomming;
+                if (activationsCSV.EndOfStream == false)
+                    incomming = activationsCSV.ReadLine().Split('.');
+                else
+                {
+                    // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
+                    Console.WriteLine("--Insufecient lines to read");
+                    return (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
+                }
+                
+                
+                double[] neuralActivations = new double[incomming.Length - 1];
+                for (int j = 0; j < incomming.Length - 1; j++)
+                {
+                    if (int.Parse(incomming[incomming.Length - 1]) == j)
+                        neuralActivations[j] = Math.Pow(float.Parse(incomming[j]) - 1, 2);
+                    else
+                        neuralActivations[j] = Math.Pow(float.Parse(incomming[j]), 2);
+                }
 
+                for (int j = 0; j < weights.Length; j++)
+                {
 
-
-
-
+                }
 
 
 
             }
 
 
-
+            double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
 
 
             activationsCSV.Close();
-            return;
+            return timeStampEnd;
         } // PropagateBart
         static void InitNeurons(bool nullify)
         {
@@ -317,8 +347,8 @@ namespace RacingML
             weights = new float[layers.Length - 1][][];
             for (int i = 0; i < weights.Length; i++)
             {
-                weights[i] = new float[layers[i]][];
-                for (int j = 0; j < layers[i]; j++)
+                weights[i] = new float[layers[i+1]][];
+                for (int j = 0; j < layers[i+1]; j++)
                     weights[i][j] = new float[layers[i]];
             }
 

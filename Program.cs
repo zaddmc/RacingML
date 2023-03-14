@@ -11,6 +11,7 @@ namespace RacingML
         static private float[][] neurons;
         static private float[][] biases;
         static private float[][][] weights;
+        static private List<int> activations;
 
         static void Main(string[] args)
         {
@@ -18,16 +19,17 @@ namespace RacingML
 
             StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
+            activations = new List<int>();
 
-            /*
+
             //debugging script 
             InitBiases(false);
             InitNeurons(false);
             InitWeights(false);
-            //ActivateBart(sr, 1000);
-            PropagateBart(1000);
+            ActivateBart(sr, 1000, false);
+            //PropagateBart(1000);
             //end debugging script
-            */
+
 
             bool isActive = true;
             while (isActive)
@@ -62,20 +64,36 @@ namespace RacingML
                         break;
 
                     // if the user wishes to feedforawrd for however many times they wish
-                    case "feedforward":
+                    case "forward" or "feedforward":
                         int cycles = 1;
                         if (command.Length > 1)
                             cycles = int.Parse(command[1]);
-                        ActivateBart(sr, cycles);
+                        Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, ActivateBart(sr, cycles, false));
                         break;
 
-                    // if the user wishes to propegate the neural network they can do as many times as they specify
-                    case "propagate":
-                        int cyclesProp = 1;
+
+                    case "run":
+                        int cyclesRun = 1;
                         if (command.Length > 1)
-                            cyclesProp = int.Parse(command[1]);
-                        Console.WriteLine("-Succesfully propegated {0} Frame, in {1} miliseconds", cyclesProp, PropagateBart(cyclesProp));
+                        {
+                            if (command.Length > 2)
+                                cyclesRun = int.Parse(command[2]);
+                            Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cyclesRun, ActivateBart(sr, cyclesRun, bool.Parse(command[1])));
+                        }
+                        else
+                            Console.WriteLine("-Missing or invalid argument");
+
                         break;
+
+                    /*
+                // if the user wishes to propegate the neural network they can do as many times as they specify
+                case "propagate":
+                    int cyclesProp = 1;
+                    if (command.Length > 1)
+                        cyclesProp = int.Parse(command[1]);
+                    Console.WriteLine("-Succesfully propegated {0} Frame, in {1} miliseconds", cyclesProp, ActivateBart(sr, cyclesProp));
+                    break;
+                    */
 
                     // different values can be saved if the user wishes to
                     case "save":
@@ -221,7 +239,7 @@ namespace RacingML
 
             return int.Parse(strings[0]);
         } // DoTheThingBart
-        static void ActivateBart(StreamReader sr, int cycles)
+        static double ActivateBart(StreamReader sr, int cycles, bool propagate)
         {
             StreamWriter activationsCSV = new StreamWriter(@"Activations.csv");
 
@@ -231,64 +249,87 @@ namespace RacingML
             // i call the forward feeding network as many times as wished and then i save the neuron activations aswell as the label os that i can later tell it how to behave properly
             for (int i = 0; i < cycles; i++)
             {
-                int label;
-                if (sr.EndOfStream == false)
-                    label = DoTheThingBart(sr.ReadLine());
-                else
-                {
-                    // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
-                    Console.WriteLine("--Insufecient lines to read, stopped at {0} it took {1} miliseconds", i, (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds);
-                    return;
-                }
+                int label = DoTheThingBart(sr.ReadLine());
                 for (int j = 0; j < neurons[neurons.Length - 1].Length; j++)
                     activationsCSV.Write("{0}.", neurons[neurons.Length - 1][j]);
                 activationsCSV.WriteLine(label);
+                if (propagate)
+                    PropagateBart(label);
             }
-
-            // i write a messeage to say that it was succesfull
-            Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds);
+            double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
 
             activationsCSV.Close();
-            return;
+            return timeStampEnd;
         } // ActivateBart
-        static double PropagateBart(int cycles)
+        static double PropagateBart(int label)
         {
             StreamReader activationsCSV = new StreamReader(@"Activations.csv");
 
             DateTime timeStamp = DateTime.UtcNow;
 
-            for (int i = 0; i < cycles; i++)
             {
-                //reading the activated neurons and the associated label
-                string[] incomming;
-                if (activationsCSV.EndOfStream == false)
-                    incomming = activationsCSV.ReadLine().Split('.');
-                else
+                int i = weights.Length;
+                while (i != 0)
                 {
-                    // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
-                    Console.WriteLine("--Insufecient lines to read");
-                    return (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
-                }
-
-
-                double[] neuralActivations = new double[incomming.Length - 1];
-                for (int j = 0; j < incomming.Length - 1; j++)
-                {
-                    if (int.Parse(incomming[incomming.Length - 1]) == j)
-                        neuralActivations[j] = Math.Pow(float.Parse(incomming[j]) - 1, 2);
+                    // this is temporaly unneeded
+                    /*
+                    //reading the activated neurons and the associated label
+                    if (activationsCSV.EndOfStream == true)
+                    {
+                        // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
+                        Console.WriteLine("--Insufecient lines to read");
+                        return (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
+                    }
+                    else if (a == weights.Length)
+                    {
+                        string[] quickConersion = activationsCSV.ReadLine().Split('.');
+                        incomming = new float[quickConersion.Length - 1];
+                        for (int j = 0; j < incomming.Length; j++)
+                        {
+                            incomming[j] = float.Parse(quickConersion[j]);
+                        }
+                        label = int.Parse(quickConersion[quickConersion.Length]);
+                    }
                     else
-                        neuralActivations[j] = Math.Pow(float.Parse(incomming[j]), 2);
+                    {
+                    incomming = new float[neurons[a].Length];
+                        for (int j = 0; j < neurons[a].Length; j++)
+                        {
+                            incomming[j] = neurons[a][j];
+
+                        }    
+                    }
+                    */
+
+                    // reading incomming neurons
+                    float[] incomming = new float[neurons[i].Length];
+                    for (int j = 0; j < neurons[i].Length; j++)
+                    {
+                        incomming[j] = neurons[i][j];
+
+                    }
+
+                    // calculatiung how far from the wanted value it is
+                    double[] incommingActivations = new double[incomming.Length];
+                    if (i == weights.Length)
+                        for (int j = 0; j < incommingActivations.Length; j++)
+                        {
+                            if (label == j)
+                                incommingActivations[j] = Math.Pow(incomming[j] - 1, 2);
+                            else
+                                incommingActivations[j] = Math.Pow(incomming[j], 2) * -1;
+                        }
+                    else
+                        for (int j = 0; j < incommingActivations.Length; j++)
+                        {
+                            incommingActivations[j] = Math.Pow(incomming[j] /*  - insert actual value here */, 2);
+                        }
+
+
+
+                    i--;
                 }
-
-                for (int j = 0; j < weights.Length; j++)
-                {
-
-                }
-
-
-
             }
-
 
             double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 
@@ -11,7 +10,14 @@ namespace RacingML
         static private float[][] neurons;
         static private float[][] biases;
         static private float[][][] weights;
-        static private List<int> activations;
+
+        static private float[][] desiredNeurons;
+        static private float[][] biasesSmudge;
+        static private float[][][] weightsSmudge;
+
+
+        static private float learningRate = 1f;
+        static private float weightDecay = 0.001f;
 
         static void Main(string[] args)
         {
@@ -19,14 +25,14 @@ namespace RacingML
 
             StreamReader sr = new StreamReader(@"mnist_train.csv");
             sr.ReadLine();
-            activations = new List<int>();
 
 
             //debugging script 
             InitBiases(false);
             InitNeurons(false);
             InitWeights(false);
-            ActivateBart(sr, 1000, false);
+            InitSmudge();
+            ActivateBart(sr, 1000, true);
             //PropagateBart(1000);
             //end debugging script
 
@@ -235,6 +241,7 @@ namespace RacingML
                     for (int k = 0; k < neurons[i - 1].Length; k++)
                         value += weights[i - 1][j][k] * neurons[i - 1][k];
                     neurons[i][j] = (float)Math.Tanh(value);
+                    desiredNeurons[i][j] = neurons[i][j];
                 }
 
             return int.Parse(strings[0]);
@@ -261,82 +268,154 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
-        static double PropagateBart(int label)
+        static void PropagateBart(int label)
         {
-            StreamReader activationsCSV = new StreamReader(@"Activations.csv");
+            //StreamReader activationsCSV = new StreamReader(@"Activations.csv");
 
-            DateTime timeStamp = DateTime.UtcNow;
 
+            /*
+            int i = weights.Length;
+            while (i > 0)
             {
-                int i = weights.Length;
-                while (i != 0)
+                // this is unneeded
+                
+                //reading the activated neurons and the associated label
+                if (activationsCSV.EndOfStream == true)
                 {
-                    // this is temporaly unneeded
-                    /*
-                    //reading the activated neurons and the associated label
-                    if (activationsCSV.EndOfStream == true)
+                    // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
+                    Console.WriteLine("--Insufecient lines to read");
+                    return (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
+                }
+                else if (a == weights.Length)
+                {
+                    string[] quickConersion = activationsCSV.ReadLine().Split('.');
+                    incomming = new float[quickConersion.Length - 1];
+                    for (int j = 0; j < incomming.Length; j++)
                     {
-                        // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
-                        Console.WriteLine("--Insufecient lines to read");
-                        return (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
+                        incomming[j] = float.Parse(quickConersion[j]);
                     }
-                    else if (a == weights.Length)
+                    label = int.Parse(quickConersion[quickConersion.Length]);
+                }
+                else
+                {
+                incomming = new float[neurons[a].Length];
+                    for (int j = 0; j < neurons[a].Length; j++)
                     {
-                        string[] quickConersion = activationsCSV.ReadLine().Split('.');
-                        incomming = new float[quickConersion.Length - 1];
-                        for (int j = 0; j < incomming.Length; j++)
-                        {
-                            incomming[j] = float.Parse(quickConersion[j]);
-                        }
-                        label = int.Parse(quickConersion[quickConersion.Length]);
-                    }
-                    else
+                        incomming[j] = neurons[a][j];
+
+                    }    
+                }
+                
+
+
+
+                // reading incomming neurons
+                float[] incomming = new float[neurons[i].Length];
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    incomming[j] = neurons[i][j];
+
+                }
+
+                // calculatiung how far from the wanted value it is
+                float[] wantedChange = new float[incomming.Length];
+                if (i == weights.Length)
+                    for (int j = 0; j < wantedChange.Length; j++)
                     {
-                    incomming = new float[neurons[a].Length];
-                        for (int j = 0; j < neurons[a].Length; j++)
-                        {
-                            incomming[j] = neurons[a][j];
-
-                        }    
+                        if (label == j)
+                            wantedChange[j] = MathF.Pow(incomming[j] - 1, 2);
+                        else
+                            wantedChange[j] = MathF.Pow(incomming[j], 2) * -1;
                     }
-                    */
-
-                    // reading incomming neurons
-                    float[] incomming = new float[neurons[i].Length];
-                    for (int j = 0; j < neurons[i].Length; j++)
+                else
+                    for (int j = 0; j < wantedChange.Length; j++)
                     {
-                        incomming[j] = neurons[i][j];
-
+                        wantedChange[j] = MathF.Pow(incomming[j]   - insert wanted value here , 2);
                     }
 
-                    // calculatiung how far from the wanted value it is
-                    double[] incommingActivations = new double[incomming.Length];
-                    if (i == weights.Length)
-                        for (int j = 0; j < incommingActivations.Length; j++)
-                        {
-                            if (label == j)
-                                incommingActivations[j] = Math.Pow(incomming[j] - 1, 2);
-                            else
-                                incommingActivations[j] = Math.Pow(incomming[j], 2) * -1;
-                        }
-                    else
-                        for (int j = 0; j < incommingActivations.Length; j++)
-                        {
-                            incommingActivations[j] = Math.Pow(incomming[j] /*  - insert actual value here */, 2);
-                        }
+                
+
+                i--;
+            }
+        */ //scrap
 
 
+            
 
-                    i--;
+
+            for (int i = neurons.Length - 1; i >= 1; i--)
+            {
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    var biasSmudge = TanhDerivative(neurons[i][j]) * (desiredNeurons[i][j] - neurons[i][j]);
+                    biasesSmudge[i][j] += biasSmudge;
+                    for (int k = 0; k < neurons[i-1].Length; k++)
+                    {
+                        var weightSmudge = neurons[i - 1][k] * biasSmudge;
+                        weightsSmudge[i - 1][j][k] += weightSmudge;
+
+                        var neuronSmudge = weights[i - 1][j][k] * biasSmudge;
+                        desiredNeurons[i - 1][k] += neuronSmudge;
+                    }
                 }
             }
 
-            double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
+
+            for (int i = neurons.Length-1; i >= 1; i--)
+            {
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    biases[i][j] += biasesSmudge[i][j] * learningRate;
+                    biases[i][j] *= 1 - weightDecay;
+                    biasesSmudge[i][j] = 0;
+
+                    for (var k = 0; k < neurons[i - 1].Length; k++)
+                    {
+                        weights[i - 1][j][k] += weightsSmudge[i - 1][j][k] * learningRate;
+                        weights[i - 1][j][k] *= 1 - weightDecay;
+                        weightsSmudge[i - 1][j][k] = 0;
+                    }
+
+                    desiredNeurons[i][j] = 0;
+
+                }
+            }
 
 
-            activationsCSV.Close();
-            return timeStampEnd;
+
+
+
+
+            //activationsCSV.Close();
         } // PropagateBart
+        static float TanhDerivative(float x)
+        {
+            return x * (1 - x);
+        }
+        static void InitSmudge()
+        {
+            // this is only needed in the backpropagation algorithim
+
+            // allocates memory for smudge of neurons
+            desiredNeurons = new float[layers.Length][];
+            for (int i = 0; i < layers.Length; i++)
+                desiredNeurons[i] = new float[layers[i]];
+
+            // allocates memory for smudge of biases
+            biasesSmudge = new float[layers.Length][];
+            for (int i = 0; i < layers.Length; i++)
+                biasesSmudge[i] = new float[layers[i]];
+
+            // allocates memory for smudge of weights
+            weightsSmudge = new float[layers.Length - 1][][];
+            for (int i = 0; i < weightsSmudge.Length; i++)
+            {
+                weightsSmudge[i] = new float[layers[i + 1]][];
+                for (int j = 0; j < layers[i + 1]; j++)
+                    weightsSmudge[i][j] = new float[layers[i]];
+            }
+
+        } // InitSmudge
         static void InitNeurons(bool nullify)
         {
             StreamReader neuronsCSV = new StreamReader(@"Neurons.csv");

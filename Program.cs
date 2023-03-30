@@ -6,7 +6,6 @@ namespace RacingML
 {
     class Program
     {
-        bool gay = true;
         static private int[] layers = { 784, 16, 16, 10 };
         static private float[][] neurons;
         static private float[][] biases;
@@ -17,8 +16,8 @@ namespace RacingML
         static private float[][][] weightsSmudge;
 
 
-        static private float learningRate = 1f;
-        static private float weightDecay = 0.001f;
+        static private float learningRate = 1.1f;
+        static private float weightDecay = 0f;
 
         static void Main(string[] args)
         {
@@ -29,13 +28,20 @@ namespace RacingML
 
 
             //debugging script 
-            InitBiases(false);
-            InitNeurons(false);
-            InitWeights(false);
-            InitSmudge();
-            ActivateBart(sr, 1000, false);
-            //PropagateBart(1000);
+            if (true)
+            {
+                InitBiases(false);
+                InitNeurons(false);
+                InitWeights(false);
+                InitSmudge();
+                ActivateBart(sr, 60000, true);
+                SaveWeights();
+                SaveBiases();
+                SaveNeurons();
+                Console.WriteLine("--Script Done!--");
+            }
             //end debugging script
+
 
 
             bool isActive = true;
@@ -79,7 +85,7 @@ namespace RacingML
                         break;
 
 
-                    case "run":
+                    case "run" or "propagate":
                         int cyclesRun = 1;
                         if (command.Length > 1)
                         {
@@ -198,6 +204,7 @@ namespace RacingML
                                             InitBiases(false);
                                             InitWeights(false);
                                         }
+                                        InitSmudge();
                                         break;
                                 }
                             else
@@ -241,7 +248,7 @@ namespace RacingML
                     float value = biases[i][j];
                     for (int k = 0; k < neurons[i - 1].Length; k++)
                         value += weights[i - 1][j][k] * neurons[i - 1][k];
-                    neurons[i][j] = (float)Math.Tanh(value);
+                    neurons[i][j] = MathF.Tanh(value);
                     desiredNeurons[i][j] = neurons[i][j];
                 }
 
@@ -263,6 +270,10 @@ namespace RacingML
                 activationsCSV.WriteLine(label);
                 if (propagate)
                     PropagateBart(label);
+                if (i % 5000 == 0)
+                {
+                    Console.WriteLine((DateTime.UtcNow - timeStamp).TotalMilliseconds);
+                }
             }
             double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
 
@@ -271,77 +282,14 @@ namespace RacingML
         } // ActivateBart
         static void PropagateBart(int label)
         {
-            //StreamReader activationsCSV = new StreamReader(@"Activations.csv");
 
-
-            /*
-            int i = weights.Length;
-            while (i > 0)
+            for (int i = 0; i < neurons[neurons.Length - 1].Length; i++)
             {
-                // this is unneeded
-                
-                //reading the activated neurons and the associated label
-                if (activationsCSV.EndOfStream == true)
-                {
-                    // if there arent enoguh values in the activated list then it will break and therefore there is this simple check that will return how long it took to get to this point and will just say it failed
-                    Console.WriteLine("--Insufecient lines to read");
-                    return (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;
-                }
-                else if (a == weights.Length)
-                {
-                    string[] quickConersion = activationsCSV.ReadLine().Split('.');
-                    incomming = new float[quickConersion.Length - 1];
-                    for (int j = 0; j < incomming.Length; j++)
-                    {
-                        incomming[j] = float.Parse(quickConersion[j]);
-                    }
-                    label = int.Parse(quickConersion[quickConersion.Length]);
-                }
+                if (i == label)
+                    desiredNeurons[neurons.Length - 1][i] = 1f;
                 else
-                {
-                incomming = new float[neurons[a].Length];
-                    for (int j = 0; j < neurons[a].Length; j++)
-                    {
-                        incomming[j] = neurons[a][j];
-
-                    }    
-                }
-                
-
-
-
-                // reading incomming neurons
-                float[] incomming = new float[neurons[i].Length];
-                for (int j = 0; j < neurons[i].Length; j++)
-                {
-                    incomming[j] = neurons[i][j];
-
-                }
-
-                // calculatiung how far from the wanted value it is
-                float[] wantedChange = new float[incomming.Length];
-                if (i == weights.Length)
-                    for (int j = 0; j < wantedChange.Length; j++)
-                    {
-                        if (label == j)
-                            wantedChange[j] = MathF.Pow(incomming[j] - 1, 2);
-                        else
-                            wantedChange[j] = MathF.Pow(incomming[j], 2) * -1;
-                    }
-                else
-                    for (int j = 0; j < wantedChange.Length; j++)
-                    {
-                        wantedChange[j] = MathF.Pow(incomming[j]   - insert wanted value here , 2);
-                    }
-
-                
-
-                i--;
+                    desiredNeurons[neurons.Length - 1][i] = 0f;
             }
-        */ //scrap
-
-
-            
 
 
             for (int i = neurons.Length - 1; i >= 1; i--)
@@ -350,7 +298,7 @@ namespace RacingML
                 {
                     var biasSmudge = TanhDerivative(neurons[i][j]) * (desiredNeurons[i][j] - neurons[i][j]);
                     biasesSmudge[i][j] += biasSmudge;
-                    for (int k = 0; k < neurons[i-1].Length; k++)
+                    for (int k = 0; k < neurons[i - 1].Length; k++)
                     {
                         var weightSmudge = neurons[i - 1][k] * biasSmudge;
                         weightsSmudge[i - 1][j][k] += weightSmudge;
@@ -362,7 +310,7 @@ namespace RacingML
             }
 
 
-            for (int i = neurons.Length-1; i >= 1; i--)
+            for (int i = neurons.Length - 1; i >= 1; i--)
             {
                 for (int j = 0; j < neurons[i].Length; j++)
                 {
@@ -386,8 +334,6 @@ namespace RacingML
 
 
 
-
-            //activationsCSV.Close();
         } // PropagateBart
         static float TanhDerivative(float x)
         {

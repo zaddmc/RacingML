@@ -32,7 +32,7 @@ namespace RacingML
             InitNeurons(false);
             InitWeights(false);
             InitSmudge();
-            ActivateBart(sr, 1000, true);
+            ActivateBart(sr, 1000, false);
             //PropagateBart(1000);
             //end debugging script
 

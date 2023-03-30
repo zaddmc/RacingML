@@ -6,6 +6,7 @@ namespace RacingML
 {
     class Program
     {
+        bool gay = true;
         static private int[] layers = { 784, 16, 16, 10 };
         static private float[][] neurons;
         static private float[][] biases;

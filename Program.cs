@@ -16,8 +16,8 @@ namespace RacingML
         static private float[][][] weightsSmudge;
 
 
-        static private float learningRate = 1.1f;
-        static private float weightDecay = 0f;
+        static private float learningRate = 1f;
+        static private float weightDecay = 0.001f;
 
         static void Main(string[] args)
         {
@@ -28,6 +28,16 @@ namespace RacingML
 
 
             //debugging script 
+            if (false) //randomize the weights and whatnot
+            {
+                InitBiases(true);
+                InitWeights(true);
+                InitNeurons(true);
+                SaveBiases();
+                SaveWeights();
+                SaveNeurons();
+            }
+
             if (true)
             {
                 InitBiases(false);
@@ -35,10 +45,13 @@ namespace RacingML
                 InitWeights(false);
                 InitSmudge();
                 ActivateBart(sr, 60000, true);
+                Console.WriteLine("--weiting--");
+                BartGetsWeighted();
                 SaveWeights();
                 SaveBiases();
                 SaveNeurons();
                 Console.WriteLine("--Script Done!--");
+                return;
             }
             //end debugging script
 
@@ -310,6 +323,15 @@ namespace RacingML
             }
 
 
+
+
+
+
+
+
+        } // PropagateBart
+        static void BartGetsWeighted()
+        {
             for (int i = neurons.Length - 1; i >= 1; i--)
             {
                 for (int j = 0; j < neurons[i].Length; j++)
@@ -329,15 +351,10 @@ namespace RacingML
 
                 }
             }
-
-
-
-
-
-        } // PropagateBart
+        }
         static float TanhDerivative(float x)
         {
-            return x * (1 - x);
+            return 1 - MathF.Pow(MathF.Tanh(x), 2);
         }
         static void InitSmudge()
         {
@@ -408,7 +425,7 @@ namespace RacingML
             else // allocates the memory of them with a random value between -5 and 5
                 for (int i = 0; i < layers.Length; i++)
                     for (int j = 0; j < layers[i]; j++)
-                        biases[i][j] = random.NextSingle() * 10 - 5;
+                        biases[i][j] = random.NextSingle() - 0.5f;
 
             biasesCSV.Close();
         } // InitBiases
@@ -439,7 +456,7 @@ namespace RacingML
                 for (int i = 0; i < weights.Length; i++)
                     for (int j = 0; j < weights[i].Length; j++)
                         for (int k = 0; k < weights[i][j].Length; k++)
-                            weights[i][j][k] = random.NextSingle() * 10 - 5;
+                            weights[i][j][k] = random.NextSingle() - 0.5f;
 
 
             weightsCSV.Close();

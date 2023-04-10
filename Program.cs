@@ -270,6 +270,7 @@ namespace RacingML
         static double ActivateBart(StreamReader sr, int cycles, bool propagate)
         {
             StreamWriter activationsCSV = new StreamWriter(@"Activations.csv");
+            Propagation propagation = new Propagation();
 
             // i make a time stamp to know how long it takes
             DateTime timeStamp = DateTime.UtcNow;
@@ -282,7 +283,7 @@ namespace RacingML
                     activationsCSV.Write("{0}.", neurons[neurons.Length - 1][j]);
                 activationsCSV.WriteLine(label);
                 if (propagate)
-                    PropagateBart(label);
+                    propagation.PropagateBart(label, ref neurons, ref desiredNeurons, ref weights, ref biasesSmudge, ref weightsSmudge);
                 if (i % 5000 == 0)
                 {
                     Console.WriteLine((DateTime.UtcNow - timeStamp).TotalMilliseconds);
@@ -293,43 +294,6 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
-        static void PropagateBart(int label)
-        {
-
-            for (int i = 0; i < neurons[neurons.Length - 1].Length; i++)
-            {
-                if (i == label)
-                    desiredNeurons[neurons.Length - 1][i] = 1f;
-                else
-                    desiredNeurons[neurons.Length - 1][i] = 0f;
-            }
-
-
-            for (int i = neurons.Length - 1; i >= 1; i--)
-            {
-                for (int j = 0; j < neurons[i].Length; j++)
-                {
-                    var biasSmudge = TanhDerivative(neurons[i][j]) * (desiredNeurons[i][j] - neurons[i][j]);
-                    biasesSmudge[i][j] += biasSmudge;
-                    for (int k = 0; k < neurons[i - 1].Length; k++)
-                    {
-                        var weightSmudge = neurons[i - 1][k] * biasSmudge;
-                        weightsSmudge[i - 1][j][k] += weightSmudge;
-
-                        var neuronSmudge = weights[i - 1][j][k] * biasSmudge;
-                        desiredNeurons[i - 1][k] += neuronSmudge;
-                    }
-                }
-            }
-
-
-
-
-
-
-
-
-        } // PropagateBart
         static void BartGetsWeighted()
         {
             for (int i = neurons.Length - 1; i >= 1; i--)
@@ -351,10 +315,6 @@ namespace RacingML
 
                 }
             }
-        }
-        static float TanhDerivative(float x)
-        {
-            return 1 - MathF.Pow(MathF.Tanh(x), 2);
         }
         static void InitSmudge()
         {

@@ -46,7 +46,6 @@ namespace RacingML
 
         } // PropagateBart
     }
-    public class 
 
 
 }

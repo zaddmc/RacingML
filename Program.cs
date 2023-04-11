@@ -385,7 +385,7 @@ namespace RacingML
             else // allocates the memory of them with a random value between -5 and 5
                 for (int i = 0; i < layers.Length; i++)
                     for (int j = 0; j < layers[i]; j++)
-                        biases[i][j] = random.NextSingle() - 0.5f;
+                        biases[i][j] = 1; //random.NextSingle() - 0.5f;
 
             biasesCSV.Close();
         } // InitBiases
@@ -416,7 +416,7 @@ namespace RacingML
                 for (int i = 0; i < weights.Length; i++)
                     for (int j = 0; j < weights[i].Length; j++)
                         for (int k = 0; k < weights[i][j].Length; k++)
-                            weights[i][j][k] = random.NextSingle() - 0.5f;
+                            weights[i][j][k] = 1; //random.NextSingle() - 0.5f;
 
 
             weightsCSV.Close();

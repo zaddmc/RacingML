@@ -268,7 +268,9 @@ namespace RacingML
         static double ActivateBart(int cycles, bool propagate)
         {
             StreamWriter activationsCSV = new StreamWriter(@"Activations.csv");
+
             StreamReader sr = new StreamReader(@"mnist_train.csv");
+
 
             // i make a time stamp to know how long it takes
             DateTime timeStamp = DateTime.UtcNow;
@@ -290,10 +292,12 @@ namespace RacingML
                     activationsCSV.Write("{0}.", neurons[neurons.Length - 1][j]);
                 activationsCSV.WriteLine(label);
                 if (propagate)
+
                 {
                     PropagateBart(label);
 
                 }
+
 
                 if (i % 5000 == 0)
                 {
@@ -305,6 +309,7 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
+
         static void PropagateBart(int label)
         {
 
@@ -356,6 +361,8 @@ namespace RacingML
                 }
         }
 
+
+
         static void BartGetsWeighted()
         {
             for (int i = neurons.Length - 1; i >= 1; i--)
@@ -377,10 +384,6 @@ namespace RacingML
 
                 }
             }
-        }
-        static float TanhDerivative(float x)
-        {
-            return 1 - MathF.Pow(MathF.Tanh(x), 2);
         }
         static void InitSmudge()
         {
@@ -451,7 +454,7 @@ namespace RacingML
             else // allocates the memory of them with a random value between -5 and 5
                 for (int i = 0; i < layers.Length; i++)
                     for (int j = 0; j < layers[i]; j++)
-                        biases[i][j] = random.NextSingle() - 0.5f;
+                        biases[i][j] = 1; //random.NextSingle() - 0.5f;
 
             biasesCSV.Close();
         } // InitBiases
@@ -482,7 +485,7 @@ namespace RacingML
                 for (int i = 0; i < weights.Length; i++)
                     for (int j = 0; j < weights[i].Length; j++)
                         for (int k = 0; k < weights[i][j].Length; k++)
-                            weights[i][j][k] = random.NextSingle() - 0.5f;
+                            weights[i][j][k] = 1; //random.NextSingle() - 0.5f;
 
 
             weightsCSV.Close();

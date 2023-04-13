@@ -23,8 +23,6 @@ namespace RacingML
         {
             Console.WriteLine("Begin");
 
-            StreamReader sr = new StreamReader(@"mnist_train.csv");
-            sr.ReadLine();
 
 
             //debugging script 
@@ -44,9 +42,8 @@ namespace RacingML
                 InitNeurons(false);
                 InitWeights(false);
                 InitSmudge();
-                ActivateBart(sr, 60000, true);
-                Console.WriteLine("--weiting--");
-                BartGetsWeighted();
+                ActivateBart(1000000, true);
+                Console.WriteLine("--Saving--");
                 SaveWeights();
                 SaveBiases();
                 SaveNeurons();
@@ -81,6 +78,8 @@ namespace RacingML
                     // the user can draw as many frames as wanted, note that if there isnt specified an amount it will only draw 1 frame
                     case "drawframe":
                         int num = 1;
+                        StreamReader sr = new StreamReader(@"mnist_train.csv");
+                        sr.ReadLine();
                         if (command.Length > 1 && int.TryParse(command[1], out num))
                             for (int i = 0; i < num; i++)
                                 DrawFrame(MakeFrame(sr.ReadLine()).frame);
@@ -94,7 +93,7 @@ namespace RacingML
                         int cycles = 1;
                         if (command.Length > 1)
                             cycles = int.Parse(command[1]);
-                        Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, ActivateBart(sr, cycles, false));
+                        Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cycles, ActivateBart(cycles, false));
                         break;
 
 
@@ -104,7 +103,7 @@ namespace RacingML
                         {
                             if (command.Length > 2)
                                 cyclesRun = int.Parse(command[2]);
-                            Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cyclesRun, ActivateBart(sr, cyclesRun, bool.Parse(command[1])));
+                            Console.WriteLine("-Succesfully calculated {0} Frame, in {1} miliseconds", cyclesRun, ActivateBart(cyclesRun, bool.Parse(command[1])));
                         }
                         else
                             Console.WriteLine("-Missing or invalid argument");
@@ -230,7 +229,7 @@ namespace RacingML
                 } // main switch
             } // while opperational
 
-
+            //go to switch and remove sr
 
 
 
@@ -266,9 +265,10 @@ namespace RacingML
 
             return int.Parse(strings[0]);
         } // DoTheThingBart
-        static double ActivateBart(StreamReader sr, int cycles, bool propagate)
+        static double ActivateBart(int cycles, bool propagate)
         {
             StreamWriter activationsCSV = new StreamWriter(@"Activations.csv");
+            StreamReader sr = new StreamReader(@"mnist_train.csv");
 
             // i make a time stamp to know how long it takes
             DateTime timeStamp = DateTime.UtcNow;
@@ -276,15 +276,28 @@ namespace RacingML
             // i call the forward feeding network as many times as wished and then i save the neuron activations aswell as the label os that i can later tell it how to behave properly
             for (int i = 0; i < cycles; i++)
             {
+                if (i % 60000 == 0)
+                {
+                    if (i == 0)
+                        sr.Close();
+
+                    sr = new StreamReader(@"mnist_train.csv");
+                    sr.ReadLine();
+                    BartGetsWeighted();
+                }
                 int label = DoTheThingBart(sr.ReadLine());
                 for (int j = 0; j < neurons[neurons.Length - 1].Length; j++)
                     activationsCSV.Write("{0}.", neurons[neurons.Length - 1][j]);
                 activationsCSV.WriteLine(label);
                 if (propagate)
+                {
                     PropagateBart(label);
+
+                }
+
                 if (i % 5000 == 0)
                 {
-                    Console.WriteLine((DateTime.UtcNow - timeStamp).TotalMilliseconds);
+                    Console.WriteLine("-Time(s): {0:f2}  -Cycles: {1}", (DateTime.UtcNow - timeStamp).TotalSeconds, i);
                 }
             }
             double timeStampEnd = (double)(DateTime.UtcNow - timeStamp).TotalMilliseconds;

@@ -262,7 +262,6 @@ namespace RacingML
                     for (int k = 0; k < neurons[i - 1].Length; k++)
                         value += weights[i - 1][j][k] * neurons[i - 1][k];
                     neurons[i][j] = MathF.Tanh(value);
-                    desiredNeurons[i][j] = neurons[i][j];
                 }
 
             return int.Parse(strings[0]);
@@ -294,6 +293,60 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
+
+        static void PropagateBart(int label)
+        {
+
+            for (int i = 0; i < neurons[neurons.Length - 1].Length; i++)
+            {
+                if (i == label)
+                    desiredNeurons[neurons.Length - 1][i] = 1f;
+                else
+                    desiredNeurons[neurons.Length - 1][i] = 0f;
+            }
+
+
+            for (int i = neurons.Length - 1; i >= 1; i--)
+            {
+                Test(neurons[i]);
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    var biasSmudge = TanhDerivative(neurons[i][j]) * (desiredNeurons[i][j] - neurons[i][j]);
+                    biasesSmudge[i][j] += biasSmudge;
+                    for (int k = 0; k < neurons[i - 1].Length; k++)
+                    {
+                        var weightSmudge = neurons[i - 1][k] * biasSmudge;
+                        weightsSmudge[i - 1][j][k] += weightSmudge;
+
+                        var neuronSmudge = weights[i - 1][j][k] * biasSmudge;
+                        desiredNeurons[i - 1][k] += neuronSmudge;
+                    }
+                }
+            }
+
+
+
+
+
+
+
+
+        } // PropagateBart
+        static void Test(float[] input)
+        {
+
+            for (int i = 1; i < neurons.Length; i++)
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    float value = biases[i][j];
+                    for (int k = 0; k < neurons[i - 1].Length; k++)
+                        value += weights[i - 1][j][k] * neurons[i - 1][k];
+                    desiredNeurons[i][j] = MathF.Tanh(value);
+                }
+        }
+
+
+
         static void BartGetsWeighted()
         {
             for (int i = neurons.Length - 1; i >= 1; i--)

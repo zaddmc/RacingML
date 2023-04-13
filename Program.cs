@@ -360,9 +360,10 @@ namespace RacingML
                     desiredNeurons[i][j] = MathF.Tanh(value);
                 }
         }
-
-
-
+        static float TanhDerivative(float x)
+        {
+            return 1 - MathF.Pow(MathF.Tanh(x), 2);
+        }
         static void BartGetsWeighted()
         {
             for (int i = neurons.Length - 1; i >= 1; i--)

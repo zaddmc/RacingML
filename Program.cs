@@ -11,12 +11,13 @@ namespace RacingML
         static private float[][] biases;
         static private float[][][] weights;
 
-        static private float[][] desiredNeurons;
+        static private float[][] neuronsSmudge;
         static private float[][] biasesSmudge;
         static private float[][][] weightsSmudge;
 
+        static private float[][] desiredNeurons;
 
-        static private float learningRate = 1f;
+        static private float learningRate = 0.1f;
         static private float weightDecay = 0.001f;
 
         static void Main(string[] args)
@@ -34,6 +35,21 @@ namespace RacingML
                 SaveBiases();
                 SaveWeights();
                 SaveNeurons();
+                return;
+            }
+            if (true)
+            {
+                InitBiases(false);
+                InitNeurons(false);
+                InitWeights(false);
+                InitSmudge();
+                ActivateBart(60000, false);
+                Console.WriteLine("--Saving--");
+                SaveWeights();
+                SaveBiases();
+                SaveNeurons();
+                Console.WriteLine("--Script Done!--");
+                return;
             }
 
             if (true)
@@ -42,14 +58,12 @@ namespace RacingML
                 InitNeurons(false);
                 InitWeights(false);
                 InitSmudge();
-                ActivateBart(1000000, true);
-                Console.WriteLine("--Saving--");
-                SaveWeights();
-                SaveBiases();
-                SaveNeurons();
+                RandomShit();
                 Console.WriteLine("--Script Done!--");
                 return;
+
             }
+
             //end debugging script
 
 
@@ -292,10 +306,8 @@ namespace RacingML
                     activationsCSV.Write("{0}.", neurons[neurons.Length - 1][j]);
                 activationsCSV.WriteLine(label);
                 if (propagate)
-
                 {
                     PropagateBart(label);
-
                 }
 
 
@@ -309,7 +321,163 @@ namespace RacingML
             activationsCSV.Close();
             return timeStampEnd;
         } // ActivateBart
+        static void RandomShit()
+        {
+            StreamReader sr = new StreamReader(@"mnist_train.csv");
 
+            // i make a time stamp to know how long it takes
+            DateTime timeStamp = DateTime.UtcNow;
+
+            RandomizeWeights();
+            int i = 0;
+            double oldCost = 0, newCost = 0;
+            while (true)
+            {
+                if (i % 10000 == 0)
+                {
+                    Console.WriteLine("-Time(s): {0:f2}  -Cycles: {1:n0}", (DateTime.UtcNow - timeStamp).TotalSeconds, i);
+
+                    if (i % 60000 == 0)
+                    {
+                        // the training set
+                        if (i == 0)
+                            sr.Close();
+
+                        sr = new StreamReader(@"mnist_train.csv");
+                        sr.ReadLine();
+
+                        // mishandeling values
+                        oldCost = 0; newCost = 0;
+                    }
+                    if (Console.KeyAvailable)
+                    {
+                        ConsoleKeyInfo keyInfo = Console.ReadKey(true);
+                        if (keyInfo.KeyChar == 's')
+                        {
+                            Console.WriteLine("-Saving-");
+                            SaveBiases();
+                            SaveWeights();
+                        }
+                        return;
+                    }
+                }
+                for (int j = 0; j < 1000; j++)
+                {
+                    string str = sr.ReadLine();
+                    oldCost += Cost(OldRandomShit(str));
+                    newCost += Cost(NewRandomShit(str));
+                    i++;
+                }
+                oldCost /= 1000;
+                newCost /= 1000;
+
+                if (oldCost > newCost)
+                {
+                    for (int j = 0; j < weights.Length; j++)
+                        for (int k = 0; k < weights[^1].Length; k++)
+                        {
+                            biases[j][k] = biasesSmudge[j][k];
+
+                            for (int l = 0; l < weights[^1][^1].Length; l++)
+                            {
+                                weights[j][k][l] = weightsSmudge[j][k][l];
+                            }
+                        }
+                }
+                else
+                {
+                    RandomizeWeights();
+                }
+
+
+            }
+
+
+
+
+
+        } // RandomShit
+        static void RandomizeWeights()
+        {
+            Random random = new Random();
+            for (int i = 0; i < weights.Length; i++)
+            {
+                for (int j = 0; j < weights[i].Length; j++)
+                {
+                    float newBias = random.NextSingle() * learningRate;
+                    if (random.Next(0, 2) == 1)
+                        biasesSmudge[i][j] -= newBias;
+                    if (biasesSmudge[i][j] <= 0)
+                        biasesSmudge[i][j] -= newBias * 2;
+
+                    for (int k = 0; k < weights[i][j].Length; k++)
+                    {
+                        float newNum = random.NextSingle() * learningRate;
+                        if (random.Next(0, 2) == 1)
+                            weightsSmudge[i][j][k] -= newNum;
+                        if (weightsSmudge[i][j][k] <= 0)
+                            weightsSmudge[i][j][k] -= newNum * 2;
+                    }
+                }
+            }
+        }
+        static int OldRandomShit(string strRed)
+        {
+            // i start by loading the first layer of neurons
+            string[] strings = strRed.Split(',');
+            for (int i = 0; i < neurons[0].Length; i++)
+                if (strings[i + 1] != "0")
+                    neurons[0][i] = 1 / float.Parse(strings[i + 1]);
+                else
+                    neurons[0][i] = 0;
+
+            // the bulk of calculations
+            for (int i = 1; i < neurons.Length; i++)
+                for (int j = 0; j < neurons[i].Length; j++)
+                {
+                    float value = biases[i][j];
+                    for (int k = 0; k < neurons[i - 1].Length; k++)
+                        value += weights[i - 1][j][k] * neurons[i - 1][k];
+                    neurons[i][j] = MathF.Tanh(value);
+                }
+
+            return int.Parse(strings[0]);
+        } // OldRandomShit
+        static int NewRandomShit(string strRed)
+        {
+            // i start by loading the first layer of neurons
+            string[] strings = strRed.Split(',');
+            for (int i = 0; i < neuronsSmudge[0].Length; i++)
+                if (strings[i + 1] != "0")
+                    neuronsSmudge[0][i] = 1 / float.Parse(strings[i + 1]);
+                else
+                    neuronsSmudge[0][i] = 0;
+
+            // the bulk of calculations
+            for (int i = 1; i < neuronsSmudge.Length; i++)
+                for (int j = 0; j < neuronsSmudge[i].Length; j++)
+                {
+                    float value = biases[i][j];
+                    for (int k = 0; k < neuronsSmudge[i - 1].Length; k++)
+                        value += weights[i - 1][j][k] * neuronsSmudge[i - 1][k];
+                    neuronsSmudge[i][j] = MathF.Tanh(value);
+                }
+
+            return int.Parse(strings[0]);
+        } // NewRandomShit
+        static double Cost(int label)
+        {
+            double[] labeld = new double[10];
+            for (int i = 0; i < labeld.Length; i++)
+                if (i == label)
+                    labeld[i] = 1f;
+
+            double cost = 0;
+            for (int i = 0; i < neurons[^1].Length; i++)
+                cost += Math.Pow(neurons[^1][i] - labeld[i], 2);
+
+            return cost;
+        } // Cost
         static void PropagateBart(int label)
         {
 
@@ -339,13 +507,6 @@ namespace RacingML
                     }
                 }
             }
-
-
-
-
-
-
-
 
         } // PropagateBart
         static void Test(float[] input)
@@ -390,10 +551,15 @@ namespace RacingML
         {
             // this is only needed in the backpropagation algorithim
 
-            // allocates memory for smudge of neurons
+            // allocates memory for desired neurons
             desiredNeurons = new float[layers.Length][];
             for (int i = 0; i < layers.Length; i++)
                 desiredNeurons[i] = new float[layers[i]];
+
+            // allocates memory for smudge of neurons
+            neuronsSmudge = new float[layers.Length][];
+            for (int i = 0; i < layers.Length; i++)
+                neuronsSmudge[i] = new float[layers[i]];
 
             // allocates memory for smudge of biases
             biasesSmudge = new float[layers.Length][];
@@ -455,7 +621,7 @@ namespace RacingML
             else // allocates the memory of them with a random value between -5 and 5
                 for (int i = 0; i < layers.Length; i++)
                     for (int j = 0; j < layers[i]; j++)
-                        biases[i][j] = 1; //random.NextSingle() - 0.5f;
+                        biases[i][j] = random.NextSingle(); //- 0.5f;
 
             biasesCSV.Close();
         } // InitBiases
@@ -486,7 +652,7 @@ namespace RacingML
                 for (int i = 0; i < weights.Length; i++)
                     for (int j = 0; j < weights[i].Length; j++)
                         for (int k = 0; k < weights[i][j].Length; k++)
-                            weights[i][j][k] = 1; //random.NextSingle() - 0.5f;
+                            weights[i][j][k] = random.NextSingle(); // - 0.5f;
 
 
             weightsCSV.Close();

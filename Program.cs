@@ -17,7 +17,7 @@ namespace RacingML
 
         static private float[][] desiredNeurons;
 
-        static private float learningRate = 0.1f;
+        static private float learningRate = 0.01f;
         static private float weightDecay = 0.001f;
 
         static void Main(string[] args)
@@ -37,7 +37,7 @@ namespace RacingML
                 SaveNeurons();
                 return;
             }
-            if (true)
+            if (false)
             {
                 InitBiases(false);
                 InitNeurons(false);
@@ -329,13 +329,14 @@ namespace RacingML
             DateTime timeStamp = DateTime.UtcNow;
 
             RandomizeWeights();
+            int scale = 1000;
             int i = 0;
             double oldCost = 0, newCost = 0;
             while (true)
             {
                 if (i % 10000 == 0)
                 {
-                    Console.WriteLine("-Time(s): {0:f2}  -Cycles: {1:n0}", (DateTime.UtcNow - timeStamp).TotalSeconds, i);
+                    Console.WriteLine("-Time(s): {0:f2}  -Cycles: {1:n0} -OldCost: {2} -NewCost: {3}", (DateTime.UtcNow - timeStamp).TotalSeconds, i, oldCost, newCost);
 
                     if (i % 60000 == 0)
                     {
@@ -360,35 +361,37 @@ namespace RacingML
                         }
                         return;
                     }
+                    if (i % 300000 == 0)
+                        CompleteRandomizeWeights();
                 }
-                for (int j = 0; j < 1000; j++)
+                for (int j = 0; j < scale; j++)
                 {
                     string str = sr.ReadLine();
-                    oldCost += Cost(OldRandomShit(str));
-                    newCost += Cost(NewRandomShit(str));
+                    var (label, output) = OldRandomShit(str);
+                    oldCost += Cost(label, output);
+
+                    var (label2, output2) = NewRandomShit(str);
+                    newCost += Cost(label2, output2);
                     i++;
                 }
-                oldCost /= 1000;
-                newCost /= 1000;
+                oldCost /= scale;
+                newCost /= scale;
 
                 if (oldCost > newCost)
                 {
                     for (int j = 0; j < weights.Length; j++)
-                        for (int k = 0; k < weights[^1].Length; k++)
+                        for (int k = 0; k < weights[j].Length; k++)
                         {
                             biases[j][k] = biasesSmudge[j][k];
 
-                            for (int l = 0; l < weights[^1][^1].Length; l++)
+                            for (int l = 0; l < weights[j][k].Length; l++)
                             {
                                 weights[j][k][l] = weightsSmudge[j][k][l];
                             }
                         }
                 }
-                else
-                {
-                    RandomizeWeights();
-                }
 
+                RandomizeWeights();
 
             }
 
@@ -404,24 +407,38 @@ namespace RacingML
             {
                 for (int j = 0; j < weights[i].Length; j++)
                 {
-                    float newBias = random.NextSingle() * learningRate;
-                    if (random.Next(0, 2) == 1)
-                        biasesSmudge[i][j] -= newBias;
-                    if (biasesSmudge[i][j] <= 0)
-                        biasesSmudge[i][j] -= newBias * 2;
+                    float newBias = (random.NextSingle() - 0.5f) * learningRate;
+                    //if (random.Next(0, 2) == 1)
+                    biasesSmudge[i][j] += newBias;
 
                     for (int k = 0; k < weights[i][j].Length; k++)
                     {
-                        float newNum = random.NextSingle() * learningRate;
-                        if (random.Next(0, 2) == 1)
-                            weightsSmudge[i][j][k] -= newNum;
-                        if (weightsSmudge[i][j][k] <= 0)
-                            weightsSmudge[i][j][k] -= newNum * 2;
+                        float newNum = (random.NextSingle() - 0.5f) * learningRate;
+                        //if (random.Next(0, 2) == 1)
+                        weightsSmudge[i][j][k] += newNum;
                     }
                 }
             }
         }
-        static int OldRandomShit(string strRed)
+        static void CompleteRandomizeWeights()
+        {
+            Random random = new Random();
+            for (int i = 0; i < weights.Length; i++)
+            {
+                for (int j = 0; j < weights[i].Length; j++)
+                {
+                    float newBias = random.NextSingle();
+                    biasesSmudge[i][j] = newBias;
+
+                    for (int k = 0; k < weights[i][j].Length; k++)
+                    {
+                        float newNum = random.NextSingle();
+                        weightsSmudge[i][j][k] = newNum;
+                    }
+                }
+            }
+        }
+        static (int label, float[] output) OldRandomShit(string strRed)
         {
             // i start by loading the first layer of neurons
             string[] strings = strRed.Split(',');
@@ -441,9 +458,9 @@ namespace RacingML
                     neurons[i][j] = MathF.Tanh(value);
                 }
 
-            return int.Parse(strings[0]);
+            return (int.Parse(strings[0]), neurons[^1]);
         } // OldRandomShit
-        static int NewRandomShit(string strRed)
+        static (int label, float[] output) NewRandomShit(string strRed)
         {
             // i start by loading the first layer of neurons
             string[] strings = strRed.Split(',');
@@ -459,13 +476,13 @@ namespace RacingML
                 {
                     float value = biases[i][j];
                     for (int k = 0; k < neuronsSmudge[i - 1].Length; k++)
-                        value += weights[i - 1][j][k] * neuronsSmudge[i - 1][k];
+                        value += weightsSmudge[i - 1][j][k] * neuronsSmudge[i - 1][k];
                     neuronsSmudge[i][j] = MathF.Tanh(value);
                 }
 
-            return int.Parse(strings[0]);
+            return (int.Parse(strings[0]), neuronsSmudge[^1]);
         } // NewRandomShit
-        static double Cost(int label)
+        static double Cost(int label, float[] output)
         {
             double[] labeld = new double[10];
             for (int i = 0; i < labeld.Length; i++)
@@ -473,8 +490,8 @@ namespace RacingML
                     labeld[i] = 1f;
 
             double cost = 0;
-            for (int i = 0; i < neurons[^1].Length; i++)
-                cost += Math.Pow(neurons[^1][i] - labeld[i], 2);
+            for (int i = 0; i < output.Length; i++)
+                cost += Math.Pow(output[i] - labeld[i], 2);
 
             return cost;
         } // Cost
